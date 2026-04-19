@@ -56,7 +56,7 @@ if 'ai_completed' not in st.session_state:
     st.session_state.metrics = {}
     st.session_state.hand_info = {}
 
-st.title("台灣麻將計分系統")
+st.title("台灣麻將計分輔助系統")
 st.markdown("上傳您的麻將牌面，讓 YOLOv8 雙視角 AI 瞬間為您結算台數！")
 st.markdown("---")
 
@@ -79,7 +79,7 @@ if front_img_file or top_img_file:
     if top_img_file:
         p_col2.image(Image.open(top_img_file), caption="明牌預覽", use_container_width=True)
 
-#st.markdown("---")
+st.markdown("---")
 
 # 🚀 --- 2. 結算按鈕與 AI 執行區 ---
 if st.button("開始計算台數", use_container_width=True):
@@ -119,10 +119,14 @@ if st.button("開始計算台數", use_container_width=True):
             st.session_state.ai_completed = True
             st.session_state.final_remaining = final_remaining
             
-            if not final_remaining:
+            # 👇 [重點修正] 新增防呆機制：確認牌數 >= 17 才丟給 AI 算台數
+            if not final_remaining and len(final_hand_zh) >= 17:
                 tai, details = calculate_tai(final_sequences, final_triplets, final_quads, final_pairs, final_hand_zh, is_men_qing, concealed_triplets_count)
                 st.session_state.base_tai = tai
                 st.session_state.details = details
+            else:
+                st.session_state.base_tai = 0
+                st.session_state.details = []
             
             st.session_state.metrics = {
                 "seq": len(final_sequences),
@@ -132,7 +136,6 @@ if st.button("開始計算台數", use_container_width=True):
                 "total_tiles": len(final_hand_zh)
             }
             
-            # 👇 存入時強制轉成乾淨的字串
             st.session_state.hand_info = {
                 "concealed": ", ".join(concealed_hand) if isinstance(concealed_hand, list) else str(concealed_hand),
                 "exposed": '無 (門清)' if is_men_qing else (", ".join(exposed_melds) if isinstance(exposed_melds, list) else str(exposed_melds))
@@ -143,7 +146,7 @@ if st.button("開始計算台數", use_container_width=True):
 if st.session_state.ai_completed:
     st.markdown("---")
     
-    st.markdown("### 🔍 牌型歸類結果")
+    st.markdown("### 牌型歸類結果")
     st.info(f"**共偵測到 {st.session_state.metrics.get('total_tiles', 0)} 張牌**")
     
     col_a, col_b, col_c, col_d = st.columns(4)
@@ -152,16 +155,15 @@ if st.session_state.ai_completed:
     col_c.metric("槓子", st.session_state.metrics.get('quad', 0))
     col_d.metric("將眼", st.session_state.metrics.get('pair', 0))
 
-    # 👇 顯示前再做一次終極過濾，把任何可能殘留的 [] 跟 '' 砍掉
     clean_concealed = str(st.session_state.hand_info.get('concealed', '')).replace("[", "").replace("]", "").replace("'", "")
     clean_exposed = str(st.session_state.hand_info.get('exposed', '')).replace("[", "").replace("]", "").replace("'", "")
 
     st.write(f"**暗牌:** {clean_concealed}")
-    st.write(f"**明牌:** {clean_exposed}")
+    st.write(f" **明牌:** {clean_exposed}")
 
     st.markdown("---")
 
-    st.markdown("### 動態台數自行勾選區 (AI 無法判定之過程)")
+    st.markdown("### 動態台數自行勾選區 (無法判定之過程)")
     col3, col4 = st.columns(2)
 
     dynamic_tai = 0
@@ -180,20 +182,25 @@ if st.session_state.ai_completed:
 
     st.markdown("### 最終結算台數")
     
-    if st.session_state.final_remaining:
+    total_tiles = st.session_state.metrics.get('total_tiles', 0)
+    
+    # 👇 [重點修正] 在畫面顯示上攔截所有異常狀態
+    if total_tiles == 0:
+        st.warning("⚠️ 照片中未偵測到任何麻將牌！請確認照片清晰且無遮擋。")
+    elif total_tiles < 17:
+        st.error(f"❌ **牌數不足！** 台灣麻將胡牌至少需要 17 張牌，目前僅偵測到 {total_tiles} 張。")
+    elif st.session_state.final_remaining:
         st.error(f"❌ **牌型尚未完整，無法計算台數。** \n\n剩下的孤張/廢牌: {', '.join(st.session_state.final_remaining)}")
     else:
         total_tai = st.session_state.base_tai + dynamic_tai
         
         if total_tai > 0:
-            st.success(f"**總共獲得： {total_tai} 台** (靜態牌型 {st.session_state.base_tai} 台 + 動態勾選 {dynamic_tai} 台)")
+            st.success(f"**總共獲得： {total_tai} 台！** (靜態牌型 {st.session_state.base_tai} 台 + 動態勾選 {dynamic_tai} 台)")
             
-            # 列出 AI 算出的靜態牌型
             for d in st.session_state.details:
                 st.write(f"✅ {d}")
                 
-            # 👇 換成綠色勾勾，並把 (自行勾選) 變成淺灰色斜體
             for dd in dynamic_details:
-                st.markdown(f"✅ {dd} <span style='color: #9E9E9E; font-size: 0.9em;'>(自行勾選)</span>", unsafe_allow_html=True)
+                st.markdown(f"✅ {dd} <span style='color: #9E9E9E; font-size: 0.9em; font-style: italic;'>(自行勾選)</span>", unsafe_allow_html=True)
         else:
             st.warning("平胡或無特殊牌型 (0台)。")
