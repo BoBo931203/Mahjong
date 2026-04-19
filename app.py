@@ -86,7 +86,7 @@ if st.button("開始計算台數", use_container_width=True):
     if not front_img_file:
         st.error("⚠️ 請至少上傳一張「手牌」照片才能進行結算！")
     else:
-        with st.spinner("AI 正在解析牌型中，請稍候..."):
+        with st.spinner("正在解析牌型中，請稍候..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_front:
                 tmp_front.write(front_img_file.getvalue())
                 front_path = tmp_front.name
@@ -201,6 +201,6 @@ if st.session_state.ai_completed:
                 st.write(f"✅ {d}")
                 
             for dd in dynamic_details:
-                st.markdown(f"✅ {dd} <span style='color: #9E9E9E; font-size: 0.9em; font-style: italic;'>(自行勾選)</span>", unsafe_allow_html=True)
+                st.markdown(f"✅ {dd} <span style='color: #9E9E9E; font-size: 0.9em;'>(自行勾選)</span>", unsafe_allow_html=True)
         else:
             st.warning("平胡或無特殊牌型 (0台)。")
