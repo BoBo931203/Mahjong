@@ -57,7 +57,7 @@ if 'ai_completed' not in st.session_state:
     st.session_state.hand_info = {}
 
 st.title("台灣麻將計分輔助系統")
-st.markdown("上傳您的麻將牌面，讓 YOLOv8 雙視角 AI 瞬間為您結算台數！")
+st.markdown("上傳您的麻將牌面，讓 YOLOv8瞬間為您計算台數")
 st.markdown("---")
 
 col1, col2 = st.columns(2)
@@ -195,7 +195,7 @@ if st.session_state.ai_completed:
         total_tai = st.session_state.base_tai + dynamic_tai
         
         if total_tai > 0:
-            st.success(f"**總共獲得： {total_tai} 台！** (靜態牌型 {st.session_state.base_tai} 台 + 動態勾選 {dynamic_tai} 台)")
+            st.success(f"**總共獲得： {total_tai} 台** (靜態牌型 {st.session_state.base_tai} 台 + 動態勾選 {dynamic_tai} 台)")
             
             for d in st.session_state.details:
                 st.write(f"✅ {d}")
