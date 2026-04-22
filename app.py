@@ -5,14 +5,6 @@ import streamlit as st
 from PIL import Image
 from ultralytics import YOLO
 import tempfile
-import base64
-# ... (底下維持你原本寫好的程式碼)
-
-
-import streamlit as st
-from PIL import Image
-from ultralytics import YOLO
-import tempfile
 import os
 import base64
 
