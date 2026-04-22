@@ -1,6 +1,3 @@
-import os
-os.system("pip uninstall -y opencv-python")
-
 import streamlit as st
 from PIL import Image
 from ultralytics import YOLO
